@@ -1,12 +1,15 @@
-
 import sys
+import os
 from collections import Counter
 from pathlib import Path
 from tkinter import Tk, filedialog
 
+from dotenv import load_dotenv
+from google import genai
+
 from analyzer import LogAnalyzer
 from models import AnalysisReport, Severity
-
+from core.coordinator import LogAnalyzerCoordinator
 
 def select_file() -> Path | None:
     """Permite al usuario seleccionar un archivo de texto."""
@@ -102,30 +105,68 @@ def print_report(report: AnalysisReport) -> None:
 
 
 def main() -> int:
-    """Coordina la ejecución principal del programa."""
+    """Coordina el análisis tradicional y el análisis inteligente."""
 
-    print("\nANALIZADOR DE ARCHIVOS DE LOGS")
+    print("\nANALIZADOR INTELIGENTE DE ARCHIVOS DE LOGS")
     print("Selecciona un archivo TXT para comenzar.\n")
 
+    client = None
+
     try:
-        # Solicitar al usuario que seleccione el archivo que desea analizar.
+        # Cargar la API key desde el archivo .env
+        load_dotenv()
+        api_key = os.getenv("GEMINI_API_KEY")
+
+        if not api_key:
+            print("Error: no se encontró la API key de Gemini.")
+            return 1
+
+        # Seleccionar el archivo
         file_path = select_file()
 
-        # Si se cancela la selección, finalizar sin ejecutar el análisis.
         if file_path is None:
             print("Operación cancelada: no se seleccionó un archivo.")
             return 0
 
-        # Crear el analizador y procesar el archivo seleccionado.
+        # Ejecutar el analizador original
         analyzer = LogAnalyzer()
         report = analyzer.analyze(file_path)
 
-        # Presentar el informe generado por el analizador.
+        # Crear el cliente de Gemini
+        client = genai.Client(api_key=api_key)
+
+        # Crear el coordinador de agentes
+        coordinator = LogAnalyzerCoordinator(client)
+
+        # Ejecutar el análisis completo
+        results = coordinator.run_analysis(report)
+
+        # Mostrar el reporte original
         print_report(report)
+
+        # Mostrar el diagnóstico de Python
+        diagnostic = results["diagnostic"]
+
+        print("\nDIAGNÓSTICO INTELIGENTE")
+        print("=" * 55)
+
+        print("\nErrores:", diagnostic["errors"]["total_errors"])
+        print("Advertencias:", diagnostic["errors"]["total_warnings"])
+
+        print("\nESTADÍSTICAS")
+        print(diagnostic["statistics"])
+
+        print("\nRECOMENDACIONES")
+        for recommendation in diagnostic["recommendations"]:
+            print("-", recommendation)
+
+        # Mostrar el análisis generado por Gemini
+        print("\nANÁLISIS GENERADO POR GEMINI")
+        print("=" * 55)
+        print(results["ai_report"]["ai_analysis"])
 
         return 0
 
-    # Gestionar errores específicos para mostrar mensajes comprensibles.
     except PermissionError:
         print("Error: no tienes permisos para leer el archivo.")
         return 1
@@ -138,12 +179,14 @@ def main() -> int:
         print(f"Error de lectura: {error}")
         return 1
 
-    # Capturar otros errores inesperados para evitar una salida sin explicación.
     except Exception as error:
-        print(f"Error inesperado: {error}")
+        print(f"Error inesperado: {type(error).__name__}: {error}")
         return 1
 
+    finally:
+        if client is not None:
+            client.close()
 
 if __name__ == "__main__":
-    # Ejecutar el programa y devolver su código de salida al sistema.
+    # Ejecutar el programa principal
     sys.exit(main())
