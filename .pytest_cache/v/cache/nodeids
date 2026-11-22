@@ -1,0 +1,21 @@
+[
+  "test_edge_cases.py::TestLogAnalyzer::test_empty_file",
+  "test_edge_cases.py::TestLogAnalyzer::test_file_with_blank_lines",
+  "test_edge_cases.py::TestLogAnalyzer::test_invalid_utf8_file",
+  "test_edge_cases.py::TestLogAnalyzer::test_nonexistent_file",
+  "test_edge_cases.py::TestLogParser::test_different_date_format",
+  "test_edge_cases.py::TestLogParser::test_empty_line",
+  "test_edge_cases.py::TestLogParser::test_impossible_date",
+  "test_edge_cases.py::TestLogParser::test_incomplete_date",
+  "test_edge_cases.py::TestLogParser::test_missing_date",
+  "test_edge_cases.py::TestLogParser::test_missing_message",
+  "test_edge_cases.py::TestLogParser::test_unknown_severity",
+  "test_edge_cases.py::TestLogParser::test_valid_date",
+  "tests/test_agent.py::test_diagnostic_agent",
+  "tests/test_agent.py::test_report_agent",
+  "tests/test_coordinator.py::test_coordinator_runs_both_agents",
+  "tests/test_skills.py::test_error_detection",
+  "tests/test_skills.py::test_log_analysis_with_gemini",
+  "tests/test_skills.py::test_recommendations",
+  "tests/test_skills.py::test_statistics"
+]
